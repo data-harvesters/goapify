@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -77,6 +78,26 @@ func (a *Actor) Output(payload any) error {
 
 	if resp.StatusCode != 201 {
 		return fmt.Errorf("unable to add dataset: %s", string(dd))
+	}
+
+	return nil
+}
+
+func (a *Actor) CreateProxyConfiguration(proxyOptions *ProxyConfigurationOptions) error {
+	if proxyOptions == nil {
+		proxyOptions = &ProxyConfigurationOptions{}
+	}
+
+	if proxyOptions.Password == "" {
+		proxyOptions.Password = os.Getenv("APIFY_PROXY_PASSWORD")
+	}
+
+	if len(proxyOptions.Groups) == 0 {
+		proxyOptions.Groups = []string{}
+	}
+
+	if proxyOptions.CountryCode == "" {
+		proxyOptions.CountryCode = "US"
 	}
 
 	return nil
