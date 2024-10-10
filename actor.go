@@ -101,27 +101,11 @@ func (a *Actor) Output(payload any) error {
 }
 
 func (a *Actor) CreateProxyConfiguration(proxyOptions *ProxyConfigurationOptions) error {
-	if proxyOptions == nil {
-		proxyOptions = &ProxyConfigurationOptions{}
-	}
 
-	if proxyOptions.Password == "" {
-		proxyOptions.Password = os.Getenv("APIFY_PROXY_PASSWORD")
-	}
-
-	if proxyOptions.HostName == "" {
-		proxyOptions.HostName = os.Getenv("APIFY_PROXY_HOSTNAME")
-	}
-	if proxyOptions.Port == "" {
-		proxyOptions.Port = os.Getenv("APIFY_PROXY_PORT")
-	}
-
-	if proxyOptions.Group == "" {
-		proxyOptions.Group = "auto"
-	}
-
-	if proxyOptions.CountryCode == "" {
-		proxyOptions.CountryCode = "US"
+	if proxyOptions.UseApifyProxy {
+		proxyOptions.password = os.Getenv("APIFY_PROXY_PASSWORD")
+		proxyOptions.hostName = os.Getenv("APIFY_PROXY_HOSTNAME")
+		proxyOptions.port = os.Getenv("APIFY_PROXY_PORT")
 	}
 
 	proxyConfiguration := newProxyConfiguration(proxyOptions)
