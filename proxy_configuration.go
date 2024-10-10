@@ -1,6 +1,7 @@
 package goapify
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"net/url"
@@ -8,15 +9,15 @@ import (
 )
 
 type ProxyConfigurationOptions struct {
-	UseApifyProxy bool     `json:"useApifyProxy"`
-	Groups        []string `json:"apifyProxyGroups"`
-	CountryCode   string   `json:"apifyProxyCountry"`
+	UseApifyProxy bool      `json:"useApifyProxy"`
+	Groups        *[]string `json:"apifyProxyGroups"`
+	CountryCode   *string   `json:"apifyProxyCountry"`
 
 	ProxyUrls *[]string `json:"proxyUrls"`
 
-	password string
-	hostName string
-	port     string
+	password string `json:"-"`
+	hostName string `json:"-"`
+	port     string `json:"-"`
 }
 
 type ProxyConfiguration struct {
@@ -44,7 +45,13 @@ func (p *ProxyConfiguration) Proxy() (*url.URL, error) {
 
 		return u, nil
 	}
-	group := p.options.Groups[r.Intn(len(p.options.Groups))]
+
+	if p.options.Groups == nil {
+		return nil, errors.New("no proxy groups found")
+	}
+	groups := *p.options.Groups
+
+	group := groups[r.Intn(len(groups))]
 
 	connectionString := fmt.Sprintf(`http://%s:%s@%s:%s`,
 		fmt.Sprintf("group-%s", group),
