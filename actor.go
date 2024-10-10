@@ -16,6 +16,8 @@ type Actor struct {
 
 	DatasetId string
 
+	payload map[string]any
+
 	client *http.Client
 }
 
@@ -47,6 +49,12 @@ func (a *Actor) Input(payload any) error {
 	if err := json.NewDecoder(resp.Body).Decode(&payload); err != nil {
 		return err
 	}
+
+	var p map[string]any
+	if err := json.NewDecoder(resp.Body).Decode(&p); err != nil {
+		return err
+	}
+	a.payload = p
 
 	return nil
 }
@@ -92,8 +100,15 @@ func (a *Actor) CreateProxyConfiguration(proxyOptions *ProxyConfigurationOptions
 		proxyOptions.Password = os.Getenv("APIFY_PROXY_PASSWORD")
 	}
 
-	if len(proxyOptions.Groups) == 0 {
-		proxyOptions.Groups = []string{}
+	if proxyOptions.HostName == "" {
+		proxyOptions.HostName = os.Getenv("APIFY_PROXY_HOSTNAME")
+	}
+	if proxyOptions.Port == "" {
+		proxyOptions.Port = os.Getenv("APIFY_PROXY_PORT")
+	}
+
+	if proxyOptions.Group == "" {
+		proxyOptions.Group = "auto"
 	}
 
 	if proxyOptions.CountryCode == "" {
