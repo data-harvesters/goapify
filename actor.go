@@ -48,12 +48,14 @@ func (a *Actor) Input(payload any) error {
 	}
 	defer resp.Body.Close()
 
-	if err := json.NewDecoder(resp.Body).Decode(&payload); err != nil {
+	decoder := json.NewDecoder(resp.Body)
+
+	if err := decoder.Decode(&payload); err != nil {
 		return err
 	}
 
 	var p map[string]any
-	if err := json.NewDecoder(resp.Body).Decode(&p); err != nil {
+	if err := decoder.Decode(&p); err != nil {
 		return err
 	}
 	a.payload = p
