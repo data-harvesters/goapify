@@ -108,6 +108,12 @@ func (a *Actor) CreateProxyConfiguration(proxyOptions *ProxyConfigurationOptions
 		proxyOptions.port = os.Getenv("APIFY_PROXY_PORT")
 	}
 
+	if !proxyOptions.UseApifyProxy {
+		if proxyOptions.ProxyUrls == nil {
+			return nil
+		}
+	}
+
 	a.ProxyConfiguration = newProxyConfiguration(proxyOptions)
 
 	return nil
