@@ -48,14 +48,19 @@ func (a *Actor) Input(payload any) error {
 	}
 	defer resp.Body.Close()
 
-	decoder := json.NewDecoder(resp.Body)
+	b, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
 
-	if err := decoder.Decode(&payload); err != nil {
+	err = json.Unmarshal(b, &payload)
+	if err != nil {
 		return err
 	}
 
 	var p map[string]any
-	if err := decoder.Decode(&p); err != nil {
+	err = json.Unmarshal(b, &p)
+	if err != nil {
 		return err
 	}
 	a.payload = p
