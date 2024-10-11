@@ -8,12 +8,12 @@ import (
 
 func NewCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "new actorName name",
+		Use:     "new actorName",
 		Short:   "Creates a new actor environment",
 		Example: "goapify new airbnb-review-scraper",
-		Args:    cobra.ExactArgs(2),
+		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, names []string) {
-			environment := newEnv(names[0], names[1])
+			environment := newEnv(names[0])
 
 			err := environment.setup()
 			if err != nil {

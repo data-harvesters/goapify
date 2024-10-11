@@ -1,21 +1,23 @@
 package internal
 
 import (
+	"errors"
+	"log"
 	"os"
+	"os/exec"
 	"strings"
 )
 
 type environment struct {
-	name      string
-	actorName string
+	name string
 }
 
-func newEnv(actorName, name string) *environment {
+func newEnv(name string) *environment {
 	name = strings.ReplaceAll(name, "-", " ")
+	name = normalize(name)
 
 	return &environment{
-		name:      name,
-		actorName: actorName,
+		name: name,
 	}
 }
 
@@ -39,6 +41,25 @@ func (e *environment) setup() error {
 	if err != nil {
 		return err
 	}
+
+	err = e.createInputSchema()
+	if err != nil {
+		return err
+	}
+
+	doesGoExist := checkFileExists("go.mod")
+
+	if doesGoExist {
+		log.Println("go.mod found, installing latest goapify")
+
+		err = e.installGoApify()
+		if err != nil {
+			return err
+		}
+	}
+
+	log.Printf("created %s actor environment\n", e.name)
+
 	return nil
 }
 
@@ -63,13 +84,41 @@ func (e *environment) createActorGoFile() error {
 	return os.WriteFile("actor.go", []byte(actorFile), 0666)
 }
 
+func (e *environment) installGoApify() error {
+	//github.com/data-harvesters/goapify
+	cmd := exec.Command("go get github.com/data-harvesters/goapify@main")
+
+	return cmd.Run()
+}
+
 func (e *environment) createActorFolder() error {
 	return os.Mkdir(".actor", 0777)
 }
 
 func (e *environment) createDockerFile() error {
 	dockerFile := dockerFileTemplate
-	dockerFile = strings.ReplaceAll(dockerFile, "${name}", e.actorName)
+	dockerFile = strings.ReplaceAll(dockerFile, "${name}", e.name)
 
 	return os.WriteFile("Dockerfile", []byte(dockerFile), 0666)
+}
+
+func checkFileExists(filePath string) bool {
+	_, error := os.Stat(filePath)
+	//return !os.IsNotExist(err)
+	return !errors.Is(error, os.ErrNotExist)
+}
+
+func normalize(input string) string {
+	split := strings.Split(input, " ")
+
+	for i, s := range split {
+		s = toTitle(s)
+		split[i] = s
+	}
+
+	return strings.Join(split, " ")
+}
+
+func toTitle(s string) string {
+	return strings.ToUpper(s[:1]) + strings.ToLower(s[1:])
 }

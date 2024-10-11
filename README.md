@@ -29,3 +29,25 @@
 	}
 
 ```
+
+## Command-Line Interface
+GoApify provides a command-line interface to setup actor environments and more!
+
+## Install
+Please make sure you have the built goapify binary in your ```%PATH%``` to use the command-line interface
+
+### Generate New Actor Environment
+To generate a new actor environment it is quite simple, you simply need to run the command bellow
+```bash
+goapify new actorName
+```
+
+Example:
+```bash
+goapify new airbnb-scraper
+```
+
+| argument | type | description |
+|--|--|--
+| name | string | The name (replace spaces with -) |
+
