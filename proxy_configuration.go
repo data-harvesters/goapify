@@ -36,6 +36,10 @@ func (p *ProxyConfiguration) Proxy() (*url.URL, error) {
 	if p.options.ProxyUrls != nil && !p.options.UseApifyProxy {
 		proxyUrls := *p.options.ProxyUrls
 
+		if len(proxyUrls) == 0 {
+			return nil, errors.New("no proxies given")
+		}
+
 		proxyUrl := proxyUrls[r.Intn(len(*p.options.ProxyUrls))]
 
 		u, err := url.Parse(proxyUrl)
@@ -58,8 +62,6 @@ func (p *ProxyConfiguration) Proxy() (*url.URL, error) {
 		p.options.password,
 		p.options.hostName,
 		p.options.port)
-
-	fmt.Println(connectionString)
 
 	proxyUrl, err := url.Parse(connectionString)
 	if err != nil {
