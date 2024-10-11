@@ -14,11 +14,12 @@ type environment struct {
 }
 
 func newEnv(name string) *environment {
-	name = strings.ReplaceAll(name, "-", " ")
-	name = normalize(name)
+	name = strings.ToLower(name)
+	normalizedName := strings.ReplaceAll(name, "-", " ")
+	normalizedName = normalize(normalizedName)
 
 	return &environment{
-		name:      name,
+		name:      normalizedName,
 		actorName: name,
 	}
 }
