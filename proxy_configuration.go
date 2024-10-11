@@ -59,6 +59,8 @@ func (p *ProxyConfiguration) Proxy() (*url.URL, error) {
 		p.options.hostName,
 		p.options.port)
 
+	fmt.Println(connectionString)
+
 	proxyUrl, err := url.Parse(connectionString)
 	if err != nil {
 		return nil, err
