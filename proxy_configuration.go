@@ -54,7 +54,7 @@ func (p *ProxyConfiguration) Proxy() (*url.URL, error) {
 	group := groups[r.Intn(len(groups))]
 
 	connectionString := fmt.Sprintf(`http://%s:%s@%s:%s`,
-		fmt.Sprintf("group-%s", group),
+		fmt.Sprintf("groups-%s", group),
 		p.options.password,
 		p.options.hostName,
 		p.options.port)
