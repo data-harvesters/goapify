@@ -9,7 +9,8 @@ import (
 )
 
 type environment struct {
-	name string
+	name      string
+	actorName string
 }
 
 func newEnv(name string) *environment {
@@ -17,7 +18,8 @@ func newEnv(name string) *environment {
 	name = normalize(name)
 
 	return &environment{
-		name: name,
+		name:      name,
+		actorName: name,
 	}
 }
 
@@ -85,7 +87,6 @@ func (e *environment) createActorGoFile() error {
 }
 
 func (e *environment) installGoApify() error {
-	//github.com/data-harvesters/goapify
 	cmd := exec.Command("go get github.com/data-harvesters/goapify@main")
 
 	return cmd.Run()
@@ -97,14 +98,13 @@ func (e *environment) createActorFolder() error {
 
 func (e *environment) createDockerFile() error {
 	dockerFile := dockerFileTemplate
-	dockerFile = strings.ReplaceAll(dockerFile, "${name}", e.name)
+	dockerFile = strings.ReplaceAll(dockerFile, "${name}", e.actorName)
 
 	return os.WriteFile("Dockerfile", []byte(dockerFile), 0666)
 }
 
 func checkFileExists(filePath string) bool {
 	_, error := os.Stat(filePath)
-	//return !os.IsNotExist(err)
 	return !errors.Is(error, os.ErrNotExist)
 }
 
