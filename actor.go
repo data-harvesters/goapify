@@ -137,7 +137,22 @@ func (a *Actor) Output(payload any) error {
 	return nil
 }
 
-func (a *Actor) CreateProxyConfiguration(proxyOptions *ProxyConfigurationOptions) error {
+func (a *Actor) CreateProxyConfiguration() error {
+	proxyConfiguration, err := a.GetInput("proxyConfiguration")
+	if err != nil {
+		return errors.New("no proxy configuration given")
+	}
+
+	j, err := json.Marshal(proxyConfiguration)
+	if err != nil {
+		return err
+	}
+
+	var proxyOptions *ProxyConfigurationOptions
+	err = json.Unmarshal(j, proxyOptions)
+	if err != nil {
+		return err
+	}
 
 	if proxyOptions.UseApifyProxy {
 		ensureProxyEnvironment()
