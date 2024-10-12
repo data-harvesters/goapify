@@ -2,42 +2,79 @@ package goapify
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"time"
 )
 
+var (
+	InputNotFoundError = errors.New("failed to find input")
+)
+
 type Actor struct {
-	Key   string
-	Token string
+	ctx    context.Context
+	cancel context.CancelFunc
 
-	DatasetId string
+	ID     string
+	TaskID string
 
-	payload map[string]any
+	apifyUserID string
+
+	key       string
+	token     string
+	datasetId string
+
+	input map[string]any
 
 	ProxyConfiguration *ProxyConfiguration
 
 	client *http.Client
 }
 
-func NewActor(key, token, datasetID string) *Actor {
+func NewActor() *Actor {
+	ctx, cancel := context.WithCancel(context.Background())
+	ensureEnvironment()
+
 	return &Actor{
-		Key:       key,
-		Token:     token,
-		DatasetId: datasetID,
+		ctx:         ctx,
+		cancel:      cancel,
+		ID:          variables["ACTOR_ID"],
+		TaskID:      variables["ACTOR_TASK_ID"],
+		apifyUserID: variables["APIFY_USER_ID"],
+		key:         variables["APIFY_DEFAULT_KEY_VALUE_STORE_ID"],
+		token:       variables["APIFY_TOKEN"],
+		datasetId:   variables["APIFY_DEFAULT_DATASET_ID"],
+		input:       make(map[string]any),
 		client: &http.Client{
 			Timeout: 1 * time.Minute,
 		},
 	}
 }
 
-func (a *Actor) Input(payload any) error {
-	url := fmt.Sprintf("https://api.apify.com/v2/key-value-stores/%s/records/INPUT?token=%s", a.Key, a.Token)
+func (a *Actor) Context() context.Context {
+	return a.ctx
+}
 
-	req, err := http.NewRequest("GET", url, nil)
+func (a *Actor) Exit() {
+	a.cancel() // cancel actor context
+}
+
+func (a *Actor) GetInput(key string) (any, error) {
+	if v, ok := a.input[key]; ok {
+		return v, nil
+	}
+
+	return nil, InputNotFoundError
+}
+
+func (a *Actor) Input(payload any) error {
+	url := fmt.Sprintf("https://api.apify.com/v2/key-value-stores/%s/records/INPUT?token=%s", a.key, a.token)
+
+	req, err := http.NewRequestWithContext(a.ctx, "GET", url, nil)
 	if err != nil {
 		return err
 	}
@@ -63,20 +100,20 @@ func (a *Actor) Input(payload any) error {
 	if err != nil {
 		return err
 	}
-	a.payload = p
+	a.input = p
 
 	return nil
 }
 
 func (a *Actor) Output(payload any) error {
-	url := fmt.Sprintf("https://api.apify.com/v2/datasets/%s/items?token=%s", a.DatasetId, a.Token)
+	url := fmt.Sprintf("https://api.apify.com/v2/datasets/%s/items?token=%s", a.datasetId, a.token)
 
 	data, err := json.Marshal(payload)
 	if err != nil {
 		return err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
+	req, err := http.NewRequestWithContext(a.ctx, "POST", url, bytes.NewReader(data))
 	if err != nil {
 		return err
 	}
@@ -103,9 +140,7 @@ func (a *Actor) Output(payload any) error {
 func (a *Actor) CreateProxyConfiguration(proxyOptions *ProxyConfigurationOptions) error {
 
 	if proxyOptions.UseApifyProxy {
-		proxyOptions.password = os.Getenv("APIFY_PROXY_PASSWORD")
-		proxyOptions.hostName = os.Getenv("APIFY_PROXY_HOSTNAME")
-		proxyOptions.port = os.Getenv("APIFY_PROXY_PORT")
+		ensureProxyEnvironment()
 	}
 
 	if !proxyOptions.UseApifyProxy {

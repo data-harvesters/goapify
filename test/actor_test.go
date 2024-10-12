@@ -7,7 +7,8 @@ import (
 )
 
 func TestActor(t *testing.T) {
-	a := goapify.NewActor("", "", "")
+	a := goapify.NewActor()
 	_ = a
 
+	a.ProxyConfiguration.Proxy(goapify.UseRandomProxy())
 }
